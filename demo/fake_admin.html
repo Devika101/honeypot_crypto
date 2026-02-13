@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - HONEYPOT</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #000;
+            border: 2px solid #00ff00;
+            padding: 30px;
+            border-radius: 5px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #ff0000;
+            text-shadow: 0 0 10px #ff0000;
+        }
+        .login-box {
+            background: #0a0a0a;
+            padding: 30px;
+            border: 1px solid #00ff00;
+            margin-top: 20px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #000;
+            border: 1px solid #00ff00;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #00ff00;
+            color: #000;
+            border: none;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #00cc00;
+        }
+        .warning-banner {
+            background: #ff0000;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 30px;
+            animation: blink 1s infinite;
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.5; }
+        }
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #0a0a0a;
+            border-left: 4px solid #ffff00;
+            color: #ffff00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚠️ SYSTEM ADMINISTRATOR ACCESS ⚠️</h1>
+        <p style="text-align: center; margin-bottom: 20px;">Root Access Portal</p>
+        
+        <div class="login-box">
+            <form id="adminForm">
+                <label>Username:</label>
+                <input type="text" id="username" placeholder="root" required>
+                
+                <label>Password:</label>
+                <input type="password" id="password" placeholder="Enter password" required>
+                
+<button type="submit">ACCESS SYSTEM</button>
+            </form>
+        </div>
+        
+        <div class="warning-banner">
+            🚨 THIS IS A HONEYPOT TRAP 🚨<br>
+            ALL ACCESS ATTEMPTS ARE LOGGED
+        </div>
+        
+        <div class="info">
+            <strong>What's happening here?</strong><br>
+            This fake admin panel looks like a real hacking target. When hackers try to log in, we capture their information and techniques. This helps us understand attack patterns and protect real systems!
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('adminForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            fetch('/log_attempt', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    type: 'admin_panel',
+                    username: username,
+                    password: password,
+                    timestamp: new Date().toISOString(),
+                    ip: 'CAPTURED'
+                })
+            }).then(() => {
+                alert('🚨 INTRUSION DETECTED!\n\nYour IP, credentials, and attack method have been logged.\nSecurity team has been notified.');
+            });
+        });
+    </script>
+</body>
+</html>

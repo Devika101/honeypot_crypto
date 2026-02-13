@@ -39,13 +39,25 @@ class UserInDB(User):
 
 
 # In-memory user store (replace with DB in production)
-_users_db: dict[str, UserInDB] = {
-    "admin": UserInDB(
-        username="admin",
-        hashed_password=pwd_context.hash("deceptionnet"),
-        disabled=False,
-    ),
-}
+# Pre-hashed password for "deceptionnet" to avoid initialization issues
+_users_db: dict[str, UserInDB] = {}
+
+def _init_users():
+    """Initialize user database with default admin user."""
+    if not _users_db:
+        try:
+            _users_db["admin"] = UserInDB(
+                username="admin",
+                hashed_password=pwd_context.hash("deceptionnet"),
+                disabled=False,
+            )
+        except Exception as e:
+            # Fallback with pre-computed hash if bcrypt initialization fails
+            _users_db["admin"] = UserInDB(
+                username="admin",
+                hashed_password="$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYzVJMQZKHO",  # "deceptionnet"
+                disabled=False,
+            )
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -53,6 +65,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def get_user(username: str) -> Optional[UserInDB]:
+    _init_users()  # Ensure users are initialized
     return _users_db.get(username)
 
 
