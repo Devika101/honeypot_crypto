@@ -1,0 +1,110 @@
+# DeceptionNet Configuration
+
+gan:
+  latent_dim: 128
+  condition_dim: 32
+  hidden_dims: [256, 512, 1024, 512, 256]
+  output_dim: 256
+  learning_rate:
+    generator: 0.0001
+    discriminator: 0.0004
+  betas: [0.0, 0.9]
+  gradient_penalty_weight: 10.0
+  critic_iterations: 5
+  batch_size: 64
+  epochs: 500
+  checkpoint_interval: 10
+  checkpoint_dir: "models/saved_models"
+  curriculum:
+    enabled: true
+    stages:
+      - name: "basic"
+        epochs: 100
+        max_services: 3
+        max_subnets: 1
+      - name: "intermediate"
+        epochs: 200
+        max_services: 8
+        max_subnets: 3
+      - name: "advanced"
+        epochs: 200
+        max_services: 20
+        max_subnets: 10
+
+honeypot:
+  max_containers: 50
+  network_prefix: "172.20"
+  docker_network_name: "deceptionnet"
+  resource_limits:
+    cpu_quota: 50000  # 50% of one CPU
+    mem_limit: "256m"
+  auto_scale:
+    enabled: true
+    min_containers: 5
+    max_containers: 50
+    scale_up_threshold: 0.8  # attack volume ratio
+    scale_down_threshold: 0.2
+  health_check_interval: 30  # seconds
+
+detection:
+  behavior_analysis:
+    model_type: "random_forest"
+    temporal_model: "lstm"
+    lstm_hidden_dim: 128
+    lstm_num_layers: 2
+    sequence_length: 50
+    classification_threshold: 0.7
+  anomaly:
+    isolation_forest:
+      n_estimators: 200
+      contamination: 0.05
+    autoencoder:
+      encoding_dim: 32
+      hidden_dims: [128, 64]
+    alert_severity_levels:
+      low: 0.3
+      medium: 0.6
+      high: 0.8
+      critical: 0.95
+
+adaptor:
+  feedback_interval: 300  # seconds
+  rl:
+    algorithm: "PPO"
+    learning_rate: 0.0003
+    gamma: 0.99
+    epsilon_clip: 0.2
+    update_epochs: 10
+  effectiveness_metrics:
+    - time_to_discovery
+    - interaction_depth
+    - credential_testing_rate
+    - lateral_movement_attempts
+  retrain_threshold: 0.6  # retrain GAN when effectiveness drops below this
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+  jwt_secret_key: "CHANGE_ME_IN_PRODUCTION"
+  jwt_algorithm: "HS256"
+  access_token_expire_minutes: 60
+  cors_origins:
+    - "http://localhost:3000"
+    - "http://localhost:8080"
+
+logging:
+  level: "INFO"
+  format: "json"
+  file: "logs/deceptionnet.log"
+  max_bytes: 10485760  # 10MB
+  backup_count: 5
+
+elasticsearch:
+  hosts:
+    - "http://localhost:9200"
+  index_prefix: "deceptionnet"
+
+redis:
+  host: "localhost"
+  port: 6379
+  db: 0

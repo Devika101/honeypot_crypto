@@ -1,0 +1,120 @@
+# Honeypot Service Templates
+
+services:
+  ssh:
+    port: 22
+    banner: "SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.1"
+    auth:
+      allow_password: true
+      allow_pubkey: false
+      max_attempts: 6
+      fake_credentials:
+        - username: "admin"
+          password: "admin123"
+        - username: "root"
+          password: "toor"
+    commands:
+      - pattern: "whoami"
+        response: "root"
+      - pattern: "uname -a"
+        response: "Linux honeypot 5.15.0-76-generic #83-Ubuntu SMP x86_64 GNU/Linux"
+      - pattern: "cat /etc/passwd"
+        response: |
+          root:x:0:0:root:/root:/bin/bash
+          daemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin
+          www-data:x:33:33:www-data:/var/www:/usr/sbin/nologin
+          mysql:x:27:27:MySQL Server:/var/lib/mysql:/bin/false
+      - pattern: "ls"
+        response: "Desktop  Documents  Downloads  .ssh  .bash_history"
+      - pattern: "id"
+        response: "uid=0(root) gid=0(root) groups=0(root)"
+
+  http:
+    port: 80
+    server_header: "Apache/2.4.54 (Ubuntu)"
+    default_page: "index.html"
+    admin_paths:
+      - "/admin"
+      - "/wp-admin"
+      - "/phpmyadmin"
+      - "/login"
+    error_pages:
+      404: "Not Found"
+      403: "Forbidden"
+      500: "Internal Server Error"
+    vulnerabilities:
+      sql_injection:
+        endpoints:
+          - path: "/search"
+            parameter: "q"
+          - path: "/login"
+            parameter: "username"
+      directory_traversal:
+        endpoints:
+          - path: "/files"
+            parameter: "path"
+      xss:
+        endpoints:
+          - path: "/comment"
+            parameter: "body"
+
+  ftp:
+    port: 21
+    banner: "220 ProFTPD 1.3.7a Server ready."
+    anonymous_access: true
+    fake_files:
+      - name: "backup.sql.gz"
+        size: 15728640
+      - name: "config.php.bak"
+        size: 2048
+      - name: "credentials.txt"
+        size: 512
+      - name: ".htpasswd"
+        size: 256
+    max_connections: 10
+
+  mysql:
+    port: 3306
+    version: "5.7.42-0ubuntu0.18.04.1"
+    fake_databases:
+      - name: "wordpress"
+        tables: ["wp_users", "wp_posts", "wp_options"]
+      - name: "customer_data"
+        tables: ["users", "orders", "payments"]
+    auth:
+      weak_credentials:
+        - username: "root"
+          password: ""
+        - username: "admin"
+          password: "password"
+
+  smtp:
+    port: 25
+    banner: "220 mail.example.com ESMTP Postfix"
+    open_relay: true
+    max_message_size: 10485760
+
+vulnerability_profiles:
+  low_hanging:
+    description: "Easy to discover, attracts automated scanners"
+    services: ["ssh", "ftp"]
+    characteristics:
+      - weak_credentials
+      - outdated_banners
+      - anonymous_access
+
+  medium_complexity:
+    description: "Requires manual exploitation"
+    services: ["http", "mysql"]
+    characteristics:
+      - sql_injection
+      - directory_traversal
+      - weak_credentials
+
+  advanced:
+    description: "Mimics real enterprise infrastructure"
+    services: ["ssh", "http", "mysql", "smtp"]
+    characteristics:
+      - subtle_misconfigurations
+      - chained_vulnerabilities
+      - realistic_data
